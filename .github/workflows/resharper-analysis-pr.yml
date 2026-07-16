@@ -1,0 +1,37 @@
+name: ReSharper Code Analysis (Option 2 - PR Annotations)
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+# Grants permissions to write annotations/comments onto pull requests
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+
+jobs:
+  inspect-code:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: JetBrains ReSharper InspectCode
+        uses: JetBrains/ReSharper-InspectCode@v0.13
+        with:
+          solution: ./MvcMovie.sln
+          severity: SUGGESTION
+          # This outputs standard format to generate inline PR code comments
+          upload-sarif: false
