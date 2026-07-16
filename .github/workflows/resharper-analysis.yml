@@ -1,0 +1,43 @@
+name: ReSharper Code Analysis
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  inspect-code:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Setup .NET SDK (matches your application version)
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x # Change to 6.0.x or 9.0.x depending on your app
+
+      # 3. Install JetBrains ReSharper Command Line Tools globally
+      - name: Install ReSharper CLI Tools
+        run: dotnet tool install --global JetBrains.ReSharper.GlobalTools
+
+      # 4. Restore dependencies so ReSharper can analyze accurately
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      # 5. Run ReSharper InspectCode
+      # This scans for compiler errors, code smells, and formatting issues.
+      - name: Run ReSharper InspectCode
+        run: |
+          inspectcode MvcMovie.sln --output=resharper-report.xml --severity=SUGGESTION
+
+      # 6. Upload the analysis report as an artifact (Optional)
+      - name: Upload Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: resharper-quality-report
+          path: resharper-report.xml
