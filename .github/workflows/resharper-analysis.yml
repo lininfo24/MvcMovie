@@ -33,9 +33,9 @@ jobs:
           dotnet restore
           dotnet tool restore
 
-      # 5. Run ReSharper via dotnet tool runner (No PATH issues)
+      # 5. Run ReSharper via the correct local tool command name
       - name: Run ReSharper InspectCode
-        run: dotnet tool run inspectcode MvcMovie.sln --output=resharper-report.xml --severity=SUGGESTION
+        run: dotnet tool run jb inspectcode MvcMovie.sln --output=resharper-report.xml --severity=SUGGESTION
 
       # 6. Upload the analysis report as an artifact (Optional)
       - name: Upload Report Artifact
