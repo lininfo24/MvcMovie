@@ -33,12 +33,13 @@ jobs:
           dotnet restore
           dotnet tool restore
 
-      # 5. Run ReSharper and output SARIF format instead of XML
+      # 5. Run ReSharper via the correct local tool command name
       - name: Run ReSharper InspectCode
-        run: dotnet tool run jb inspectcode MvcMovie.sln --output=resharper-report.sarif --severity=SUGGESTION
+        run: dotnet tool run jb inspectcode MvcMovie.sln --output=resharper-report.xml --severity=SUGGESTION
 
-      # 6. Upload the SARIF file directly to GitHub Security Alerts
-      - name: Upload SARIF to GitHub Code Scanning
-        uses: github/code-scanning-upload-mixin@v3 # Note: Standard action is github/code-scanning-upload-action@v3
+      # 6. Upload the analysis report as an artifact (Optional)
+      - name: Upload Report Artifact
+        uses: actions/upload-artifact@v4
         with:
-          sarif_file: resharper-report.sarif
+          name: resharper-quality-report
+          path: resharper-report.xml
