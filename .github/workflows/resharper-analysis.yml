@@ -39,7 +39,7 @@ jobs:
 
       # 6. Upload the analysis report as an artifact (Optional)
       - name: Upload Report Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: resharper-quality-report
           path: resharper-report.xml
