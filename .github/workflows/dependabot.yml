@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # 1. Track NuGet packages used in your MVC App
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly" # Options: daily, weekly, monthly
+
+  # 2. Automatically keep your GitHub Action workflow versions up-to-date
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
