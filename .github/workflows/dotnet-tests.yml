@@ -1,0 +1,50 @@
+name: .NET Unit Tests & Coverage Report
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+# Grants permissions to write test execution details onto the PR Summary page
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Setup the exact .NET SDK matching your app
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # 3. Restore all project dependencies
+      - name: Restore Dependencies
+        run: dotnet restore MvcMovie.sln
+
+      # 4. Run Unit Tests and collect cross-platform coverage data
+      - name: Run Tests with Coverlet
+        run: |
+          dotnet test MvcMovie.sln --configuration Release --no-restore --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+      # 5. Combine raw coverlet xml output into a human-readable markdown table
+      - name: ReportGenerator
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.4.3
+        with:
+          signals: false
+          reports: "TestResults/**/coverage.cobertura.xml"
+          targetdir: "coveragereport"
+          reporttypes: "MarkdownSummary"
+
+      # 6. Inject the formatted coverage table straight into the GitHub Actions run summary page
+      - name: Publish Coverage Summary to PR
+        if: always()
+        run: cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
