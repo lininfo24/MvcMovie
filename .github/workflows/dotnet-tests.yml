@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: ["main"]
 
-# Grants permissions to write test execution details onto the PR Summary page
+# Crucial: Gives the pipeline permission to write directly into the PR Chat log
 permissions:
   contents: read
   pull-requests: write
@@ -20,22 +20,22 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 2. Setup the exact .NET SDK matching your app
+      # 2. Setup .NET SDK
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
-      # 3. Restore all project dependencies
+      # 3. Restore dependencies
       - name: Restore Dependencies
         run: dotnet restore MvcMovie.sln
 
-      # 4. Run Unit Tests and collect cross-platform coverage data
+      # 4. Run Unit Tests and collect coverage data
       - name: Run Tests with Coverlet
         run: |
           dotnet test MvcMovie.sln --configuration Release --no-restore --collect:"XPlat Code Coverage" --results-directory ./TestResults
 
-      # 5. Combine raw coverlet xml output into a human-readable markdown table
+      # 5. Combine raw coverlet xml into a Markdown Summary
       - name: ReportGenerator
         uses: danielpalme/ReportGenerator-GitHub-Action@5.4.3
         with:
@@ -44,7 +44,14 @@ jobs:
           targetdir: "coveragereport"
           reporttypes: "MarkdownSummary"
 
-      # 6. Inject the formatted coverage table straight into the GitHub Actions run summary page
-      - name: Publish Coverage Summary to PR
+      # 6. Keep this: Still prints to the Actions tab Summary page
+      - name: Publish Coverage Summary to Actions Dashboard
         if: always()
         run: cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
+
+      # 7. NEW: Post/Update the coverage table directly inside the PR Conversation Tab!
+      - name: Publish Coverage Summary to PR Comment
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          path: coveragereport/Summary.md
