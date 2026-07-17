@@ -1,0 +1,53 @@
+name: "CodeQL Security Scan"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    # Scans your repository automatically every Sunday at midnight
+    - cron: "0 0 * * 0"
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze Code
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup .NET SDK required to build the app
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # 3. Initialize CodeQL tools for C# compiling analysis
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          # "security-extended" finds both vulnerabilities and severe code quality bugs
+          queries: security-extended
+
+      # 4. Build your application
+      # CodeQL monitors the compiler to map how data flows through your MVC app
+      - name: Restore and Build Application
+        run: |
+          dotnet restore
+          dotnet build --configuration Release --no-restore
+
+      # 5. Perform CodeQL Analysis
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:csharp"
