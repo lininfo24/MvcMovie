@@ -1,12 +1,11 @@
 # Stage 1: Base Runtime Env (Tiny footprint for minimal security exposure)
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-chiseled AS base
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER app
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
 # Stage 2: Build Env (Heavy SDK used only to compile C# code)
-# The "chiseled" version of the .NET SDK and ASP.NET runtime images refers to a smaller, more optimized version of the standard images. These images are designed to have a reduced footprint by removing unnecessary components, which can lead to faster download times, lower resource usage, and improved security due to fewer attack surfaces.
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
