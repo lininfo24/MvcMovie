@@ -1,0 +1,51 @@
+name: Continuous Deployment (Staging & Production)
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # Job 1: Infrastructure Verification (Compiles your multi-stage Dockerfile)
+  verify-artifact:
+    name: Verify Code and Build Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Simulate Container Compilation
+        run: |
+          echo "Compiling enterprise multi-stage .NET 8 Docker image..."
+          docker build -t mvcmovie:release -f MvcMovie/Dockerfile MvcMovie/
+
+  # Job 2: Automated Deployment to the Staging Environment
+  deploy-to-staging:
+    name: Deploy to Staging Environment
+    needs: verify-artifact # Strict gate: Won't run if compilation fails
+    runs-on: ubuntu-latest
+    environment:
+      name: Staging # Connects straight to your GitHub Staging environment
+      url: https://mvcmovie.com # Simulates your target staging URL
+    steps:
+      - name: Mock Cloud Deployment
+        run: |
+          echo "Executing Continuous Delivery..."
+          echo "Pushing verified image mvcmovie:release straight to Staging Server Cluster..."
+
+  # Job 3: Protected Governance Deployment to Production
+  deploy-to-production:
+    name: Deploy to Production Environment
+    needs: deploy-to-staging # Strict gate: Cannot skip Staging validation
+    runs-on: ubuntu-latest
+    environment:
+      name: Production # CRITICAL: This mapping triggers your human approval block!
+      url: https://mvcmovie.com # Your final live production URL
+    steps:
+      - name: Execute Live Deployment
+        run: |
+          echo "Continuous Deployment Approved!"
+          echo "Deploying production binaries into active live user environment..."
