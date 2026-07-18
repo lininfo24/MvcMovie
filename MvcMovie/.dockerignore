@@ -1,0 +1,16 @@
+# Exclude local build artifact directories
+**/bin/
+**/obj/
+
+# Exclude local IDE configurations
+.vs/
+.vscode/
+
+# Exclude source control architecture
+.git/
+.github/
+
+# Exclude localized user setting variations
+*.user
+*.suo
+appsettings.Development.json
