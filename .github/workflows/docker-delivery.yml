@@ -1,0 +1,55 @@
+name: Docker Build & Trivy Container Scan
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+# Grants permissions to write security results into GitHub's dashboard
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  container-lifecycle:
+    name: Build & Scan Container Image
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Pull the codebase down to the runner
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Build your local Docker image exactly like you did locally
+      - name: Build Local Docker Image
+        run: |
+          docker build -t mvcmovie:test -f MvcMovie/Dockerfile MvcMovie/
+
+      # 3. Run Trivy to scan for High/Critical flaws and output a human report
+      - name: Run Trivy Vulnerability Scanner (CLI Print)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: "mvcmovie:test"
+          format: "table"
+          exit-code: "1" # CRITICAL: This forces the pipeline to FAIL if flaws match your criteria
+          ignore-unfixed: true # Ignores issues without an official vendor patch yet
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
+
+      # 4. Secondary scan to generate a SARIF report for the dashboard
+      - name: Run Trivy Scanner (SARIF Generation)
+        if: always() # Ensures the report uploads even if the previous step failed
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: "mvcmovie:test"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+
+      # 5. Inject the SARIF report directly into GitHub's Code Scanning dashboard
+      - name: Upload Trivy Scan Results to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-results.sarif"
