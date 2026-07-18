@@ -15,7 +15,6 @@ namespace MvcMovie.Controllers
 
         public IActionResult Index()
         {
-            string apiKey = "123456789abcabcabc";
             return View();
         }
 
