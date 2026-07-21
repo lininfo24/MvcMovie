@@ -1,4 +1,4 @@
-name: .NET Unit Tests & Coverage Report
+name: .NET Tests & Coverage Report
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
       - name: Restore Dependencies
         run: dotnet restore MvcMovie.sln
 
-      # 4. Run Unit Tests and collect coverage data
+      # 4. Run Tests and collect coverage data
       - name: Run Tests with Coverlet
         run: |
           dotnet test MvcMovie.sln --configuration Release --no-restore --collect:"XPlat Code Coverage" --results-directory ./TestResults
