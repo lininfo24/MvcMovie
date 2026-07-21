@@ -416,3 +416,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Ignore local SQLite database files
+*.db
+*.db-shm
+*.db-wal
