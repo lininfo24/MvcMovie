@@ -14,6 +14,10 @@ public static class SeedData
             serviceProvider.GetRequiredService<
                 DbContextOptions<MvcMovieContext>>()))
         {
+
+             // 1. CRUCIAL FIX: This automatically builds your tables in SQLite out of thin air
+            context.Database.EnsureCreated();
+            
             // Look for any movies.
             if (context.Movie.Any())
             {
