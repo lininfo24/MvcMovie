@@ -1,0 +1,45 @@
+name: Playwright Browser UI Testing
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  browser-scans:
+    name: Run Headless UI Gates
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Pull down your repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Set up the matching .NET SDK matching your codebase
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # 3. Restore and compile the solution architecture
+      - name: Compile Solution
+        run: dotnet build MvcMovie.sln --configuration Release
+
+      # 4. Install the specialized Playwright CLI tool and internal Chromium binaries
+      - name: Install Playwright Linux Browsers
+        run: |
+          dotnet tool install --global Microsoft.Playwright.CLI
+          playwright install --with-deps chromium
+
+      # 5. CRUCIAL: Launch your actual web application in the background of the runner server
+      # The trailing ampersand (&) forces Linux to run the server silently behind the scenes
+      - name: Launch App Web Server in Background
+        run: dotnet run --project MvcMovie/MvcMovie.csproj --configuration Release --no-build --urls http://localhost:8080 &
+
+      # 6. Execute exclusively the UI automation test files inside your consolidated project
+      - name: Execute Playwright Test Suite
+        run: dotnet test MvcMovie.Tests/MvcMovie.Tests.csproj --configuration Release --no-build --filter "FullyQualifiedName~UiTests"
