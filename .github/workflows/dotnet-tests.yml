@@ -33,7 +33,7 @@ jobs:
       # 4. Run Tests and collect coverage data
       - name: Run Tests with Coverlet
         run: |
-          dotnet test MvcMovie.sln --configuration Release --no-restore --collect:"XPlat Code Coverage" --results-directory ./TestResults --filter "FullyQualifiedName!~PlaywrightTests"
+          dotnet test MvcMovie.sln --configuration Release --no-restore --collect:"XPlat Code Coverage" --results-directory ./TestResults --filter "FullyQualifiedName!~UiTests"
 
       # 5. Combine raw coverlet xml into a Markdown Summary
       - name: ReportGenerator
