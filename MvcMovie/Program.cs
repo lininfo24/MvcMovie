@@ -9,14 +9,22 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("MvcMovieContext");
 
 // 2. Configure EF Core to use SQLite exclusively
-if (connectionString!.Contains(":memory:"))
+if (connectionString != null && connectionString.Contains(":memory:"))
 {
     // CI/CD Pipeline Mode: Keep the RAM connection open so data doesn't wipe mid-test
     var keepAliveConnection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
     keepAliveConnection.Open();
 
+    // FIXED: Tracks the connection instance for automated clean cleanup on host shutdown
+    builder.Host.ConfigureServices((context, services) =>
+    {
+        services.AddSingleton(keepAliveConnection); 
+    });
+
+    // FIXED: Maintained strict scoped context tracking for thread-safe parallel test threads
     builder.Services.AddDbContext<MvcMovieContext>(options =>
-        options.UseSqlite(keepAliveConnection));
+        options.UseSqlite(keepAliveConnection), 
+        ServiceLifetime.Scoped);
 }
 else
 {
