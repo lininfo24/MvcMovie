@@ -33,7 +33,7 @@ jobs:
             # 4. NEW: Enforce formatting styles defined in .editorconfig
             # This will return a non-zero exit code and FAIL the build if any changes are needed
             - name: Verify Code Formatting
-              run: dotnet format --verify-no-changes --severity info
+              run: dotnet format --verify-no-changes
 
             # 5. Run Tests and collect coverage data
             - name: Run Tests with Coverlet
