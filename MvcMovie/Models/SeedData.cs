@@ -1,8 +1,10 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using MvcMovie.Data;
 using System;
 using System.Linq;
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+using MvcMovie.Data;
 
 namespace MvcMovie.Models;
 
@@ -15,9 +17,9 @@ public static class SeedData
                 DbContextOptions<MvcMovieContext>>()))
         {
 
-             // 1. CRUCIAL FIX: This automatically builds your tables in SQLite out of thin air
+            // 1. CRUCIAL FIX: This automatically builds your tables in SQLite out of thin air
             context.Database.EnsureCreated();
-            
+
             // Look for any movies.
             if (context.Movie.Any())
             {

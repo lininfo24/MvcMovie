@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+
 using MvcMovie.Data;
 using MvcMovie.Models;
 var builder = WebApplication.CreateBuilder(args);
@@ -18,12 +19,12 @@ if (connectionString != null && connectionString.Contains(":memory:"))
     // FIXED: Tracks the connection instance for automated clean cleanup on host shutdown
     builder.Host.ConfigureServices((context, services) =>
     {
-        services.AddSingleton(keepAliveConnection); 
+        services.AddSingleton(keepAliveConnection);
     });
 
     // FIXED: Maintained strict scoped context tracking for thread-safe parallel test threads
     builder.Services.AddDbContext<MvcMovieContext>(options =>
-        options.UseSqlite(keepAliveConnection), 
+        options.UseSqlite(keepAliveConnection),
         ServiceLifetime.Scoped);
 }
 else

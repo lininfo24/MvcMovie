@@ -1,8 +1,11 @@
-﻿using Xunit;
 using Microsoft.AspNetCore.Mvc;
-using MvcMovie.Controllers;
 using Microsoft.Extensions.Logging;
+
 using Moq; // A standard mocking library if you need to mock dependencies later
+
+using MvcMovie.Controllers;
+
+using Xunit;
 
 namespace MvcMovie.Tests;
 

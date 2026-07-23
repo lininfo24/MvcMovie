@@ -1,57 +1,62 @@
 name: .NET Tests & Coverage Report
 
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
 
 # Crucial: Gives the pipeline permission to write directly into the PR Chat log
 permissions:
-  contents: read
-  pull-requests: write
+    contents: read
+    pull-requests: write
 
 jobs:
-  run-tests:
-    runs-on: ubuntu-latest
+    run-tests:
+        runs-on: ubuntu-latest
 
-    steps:
-      # 1. Checkout the repository code
-      - name: Checkout Code
-        uses: actions/checkout@v7
+        steps:
+            # 1. Checkout the repository code
+            - name: Checkout Code
+              uses: actions/checkout@v7
 
-      # 2. Setup .NET SDK
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: 8.0.x
+            # 2. Setup .NET SDK
+            - name: Setup .NET Core
+              uses: actions/setup-dotnet@v6
+              with:
+                  dotnet-version: 8.0.x
 
-      # 3. Restore dependencies
-      - name: Restore Dependencies
-        run: dotnet restore MvcMovie.sln
+            # 3. Restore dependencies
+            - name: Restore Dependencies
+              run: dotnet restore MvcMovie.sln
 
-      # 4. Run Tests and collect coverage data
-      - name: Run Tests with Coverlet
-        run: |
-          dotnet test MvcMovie.sln --configuration Release --no-restore --collect:"XPlat Code Coverage" --results-directory ./TestResults --filter "FullyQualifiedName!~UiTests"
+            # 4. NEW: Enforce formatting styles defined in .editorconfig
+            # This will return a non-zero exit code and FAIL the build if any changes are needed
+            - name: Verify Code Formatting
+              run: dotnet format --verify-no-changes
 
-      # 5. Combine raw coverlet xml into a Markdown Summary
-      - name: ReportGenerator
-        uses: danielpalme/ReportGenerator-GitHub-Action@5.4.3
-        with:
-          signals: false
-          reports: "TestResults/**/coverage.cobertura.xml"
-          targetdir: "coveragereport"
-          reporttypes: "MarkdownSummary"
+            # 5. Run Tests and collect coverage data
+            - name: Run Tests with Coverlet
+              run: |
+                  dotnet test MvcMovie.sln --configuration Release --no-restore --collect:"XPlat Code Coverage" --results-directory ./TestResults --filter "FullyQualifiedName!~UiTests"
 
-      # 6. Keep this: Still prints to the Actions tab Summary page
-      - name: Publish Coverage Summary to Actions Dashboard
-        if: always()
-        run: cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
+            # 6. Combine raw coverlet xml into a Markdown Summary
+            - name: ReportGenerator
+              uses: danielpalme/ReportGenerator-GitHub-Action@5.4.3
+              with:
+                  signals: false
+                  reports: "TestResults/**/coverage.cobertura.xml"
+                  targetdir: "coveragereport"
+                  reporttypes: "MarkdownSummary"
 
-      # 7. NEW: Post/Update the coverage table directly inside the PR Conversation Tab!
-      - name: Publish Coverage Summary to PR Comment
-        if: github.event_name == 'pull_request'
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          path: coveragereport/Summary.md
+            # 7. Keep this: Still prints to the Actions tab Summary page
+            - name: Publish Coverage Summary to Actions Dashboard
+              if: always()
+              run: cat coveragereport/Summary.md >> $GITHUB_STEP_SUMMARY
+
+            # 8. NEW: Post/Update the coverage table directly inside the PR Conversation Tab!
+            - name: Publish Coverage Summary to PR Comment
+              if: github.event_name == 'pull_request'
+              uses: marocchino/sticky-pull-request-comment@v2
+              with:
+                  path: coveragereport/Summary.md
