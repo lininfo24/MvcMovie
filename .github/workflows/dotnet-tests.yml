@@ -52,6 +52,6 @@ jobs:
             # 7. NEW: Post/Update the coverage table directly inside the PR Conversation Tab!
             - name: Publish Coverage Summary to PR Comment
               if: github.event_name == 'pull_request'
-              uses: marocchino/sticky-pull-request-comment@v2
+              uses: marocchino/sticky-pull-request-comment@v3
               with:
                   path: coveragereport/Summary.md
