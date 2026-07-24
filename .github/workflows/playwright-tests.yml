@@ -47,7 +47,7 @@ jobs:
 
             # NEW: Give the background SQL Server container 15 seconds to finish its boot sequence
             - name: Wait for SQL Server Container Initialization
-              run: sleep 20
+              run: sleep 60
 
             # 5. CRUCIAL: Launch your actual web application in the background of the runner server
             # B. LAUNCH THE WEB SERVER FORCED TO CONNECT TO THE SQL SERVER CONTAINER VIA OVERRIDE
