@@ -45,6 +45,10 @@ jobs:
                   dotnet tool install --global Microsoft.Playwright.CLI
                   playwright install --with-deps chromium
 
+            # NEW: Give the background SQL Server container 15 seconds to finish its boot sequence
+            - name: Wait for SQL Server Container Initialization
+              run: sleep 15
+
             # 5. CRUCIAL: Launch your actual web application in the background of the runner server
             # B. LAUNCH THE WEB SERVER FORCED TO CONNECT TO THE SQL SERVER CONTAINER VIA OVERRIDE
             # The trailing ampersand (&) forces Linux to run the server silently behind the scenes
