@@ -37,7 +37,7 @@ jobs:
 
             # 5. Combine raw coverlet xml into a Markdown Summary
             - name: ReportGenerator
-              uses: danielpalme/ReportGenerator-GitHub-Action@5.4.3
+              uses: danielpalme/ReportGenerator-GitHub-Action@5.5.10
               with:
                   signals: false
                   reports: "TestResults/**/coverage.cobertura.xml"
