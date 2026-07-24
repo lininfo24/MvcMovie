@@ -53,11 +53,12 @@ jobs:
             # B. LAUNCH THE WEB SERVER FORCED TO CONNECT TO THE SQL SERVER CONTAINER VIA OVERRIDE
             # The trailing ampersand (&) forces Linux to run the server silently behind the scenes
             - name: Launch App Web Server in Background
-              run: dotnet run --project MvcMovie/MvcMovie.csproj --configuration Release --no-build &
+              run: dotnet run --project MvcMovie/MvcMovie.csproj --configuration Release --no-build > webserver.log 2>&1 &
               env:
                   ASPNETCORE_URLS: http://localhost:8080
                   ASPNETCORE_ENVIRONMENT: Development
-                  ConnectionStrings__MvcMovieContext: "Server=localhost,1433;Database=E2EMovieTestDb;User Id=sa;Password=YourSecurePassword123!;TrustServerCertificate=True;"
+                  # FIX: Connect to the 'master' catalog first so the login clears, allowing EF Core to safely build 'E2EMovieTestDb'
+                  ConnectionStrings__MvcMovieContext: "Server=localhost,1433;Initial Catalog=master;Database=E2EMovieTestDb;User Id=sa;Password=YourSecurePassword123!;TrustServerCertificate=True;"
 
             # 6. EXECUTE EXCLUSIVELY THE UI INTERACTION TESTS
             - name: Execute Playwright Test Suite
