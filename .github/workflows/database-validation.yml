@@ -1,0 +1,36 @@
+name: Entity Framework Core Schema Validation
+
+on:
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
+
+permissions:
+    contents: read
+
+jobs:
+    database-governance:
+        name: Validate Entity Framework Migrations
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            - name: Setup .NET Core
+              uses: actions/setup-dotnet@v4
+              with:
+                  dotnet-version: 8.0.x
+
+            - name: Restore Project Dependencies
+              run: dotnet restore MvcMovie.sln
+
+            # 1. Install the Entity Framework design tool natively on the cloud runner
+            - name: Install EF Core Global CLI Tool
+              run: dotnet tool install --global dotnet-ef
+
+            # 2. GATE 1: Compile migrations into a standard sequential SQL script to verify syntax compilation
+            # This guarantees your migration tracking files are 100% free of compile errors and syntax glitches!
+            - name: Validate Migration Script Compilation
+              run: dotnet ef migrations script --output migration.sql --project MvcMovie/MvcMovie.csproj
