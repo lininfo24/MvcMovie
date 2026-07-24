@@ -47,14 +47,16 @@ jobs:
 
             # NEW: Give the background SQL Server container 15 seconds to finish its boot sequence
             - name: Wait for SQL Server Container Initialization
-              run: sleep 15
+              run: sleep 20
 
             # 5. CRUCIAL: Launch your actual web application in the background of the runner server
             # B. LAUNCH THE WEB SERVER FORCED TO CONNECT TO THE SQL SERVER CONTAINER VIA OVERRIDE
             # The trailing ampersand (&) forces Linux to run the server silently behind the scenes
             - name: Launch App Web Server in Background
-              run: dotnet run --project MvcMovie/MvcMovie.csproj --configuration Release --no-build --urls http://localhost:8080 &
+              run: dotnet run --project MvcMovie/MvcMovie.csproj --configuration Release --no-build &
               env:
+                  ASPNETCORE_URLS: http://localhost:8080
+                  ASPNETCORE_ENVIRONMENT: Development
                   ConnectionStrings__MvcMovieContext: "Server=localhost,1433;Database=E2EMovieTestDb;User Id=sa;Password=YourSecurePassword123!;TrustServerCertificate=True;"
 
             # 6. EXECUTE EXCLUSIVELY THE UI INTERACTION TESTS
