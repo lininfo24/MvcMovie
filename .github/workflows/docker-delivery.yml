@@ -19,7 +19,7 @@ jobs:
     steps:
       # 1. Pull the codebase down to the runner
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # 2. Build your local Docker image exactly like you did locally
       - name: Build Local Docker Image

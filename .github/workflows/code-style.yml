@@ -17,7 +17,7 @@ jobs:
         steps:
             # 1. Pull down the repository source files
             - name: Checkout Code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
 
             # 2. Setup the target .NET SDK framework engine
             - name: Setup .NET Core
