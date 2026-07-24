@@ -1,4 +1,4 @@
-using Microsoft.Data.Sqlite;
+﻿using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -6,30 +6,36 @@ using MvcMovie.Data;
 using MvcMovie.Models;
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Get whichever connection string is active (.Development or base)
+// 1. Get whichever connection string is active (.Development, base, or Environment Override)
 var connectionString = builder.Configuration.GetConnectionString("MvcMovieContext");
 
-// 2. Configure EF Core to use SQLite exclusively
+// 2. Configure EF Core Dynamically Based on Connection String Contents
 if (connectionString != null && connectionString.Contains(":memory:"))
 {
-    // CI/CD Pipeline Mode: Keep the RAM connection open so data doesn't wipe mid-test
+    // A. CI/CD INTEGRATION TEST MODE (SQLite In-Memory)
     var keepAliveConnection = new Microsoft.Data.Sqlite.SqliteConnection(connectionString);
     keepAliveConnection.Open();
 
-    // FIXED: Tracks the connection instance for automated clean cleanup on host shutdown
     builder.Host.ConfigureServices((context, services) =>
     {
         services.AddSingleton(keepAliveConnection);
     });
 
-    // FIXED: Maintained strict scoped context tracking for thread-safe parallel test threads
     builder.Services.AddDbContext<MvcMovieContext>(options =>
         options.UseSqlite(keepAliveConnection),
         ServiceLifetime.Scoped);
 }
+else if (connectionString != null && (connectionString.Contains("Server=") || connectionString.Contains("Database=")))
+{
+    // B. NEW: PRODUCTION & CI/CD FULL-STACK E2E MODE (Real SQL Server Container)
+    // When the Playwright workflow injects an MSSQL string, EF Core dynamically swaps engines!
+    builder.Services.AddDbContext<MvcMovieContext>(options =>
+        options.UseSqlServer(connectionString),
+        ServiceLifetime.Scoped);
+}
 else
 {
-    // Local Machine Mode: Writes to the local 'MvcMovie.db' file on your hard drive
+    // C. LOCAL MACHINE DEVELOPMENT MODE (Local SQLite File)
     builder.Services.AddDbContext<MvcMovieContext>(options =>
         options.UseSqlite(connectionString));
 }
