@@ -50,6 +50,6 @@ jobs:
       # 5. Inject the SARIF report directly into GitHub's Code Scanning dashboard
       - name: Upload Trivy Scan Results to GitHub Security
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: "trivy-results.sarif"
