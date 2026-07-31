@@ -16,46 +16,48 @@ The repository organizes source code, unit tests, and pipelines into isolated mo
 │   ├── workflows/
 │   │   ├── code-style.yml          # Automated C# code formatting gate
 │   │   ├── codeql-analysis.yml     # Deep SAST data-flow vulnerability scanner
-│   │   ├── dotnet-tests.yml        # Test execution (Unit, Integration, Playwright)
-│   │   ├── docker-build-scan.yml   # Multi-stage Docker build & Trivy scanner
+│   │   ├── database-validation.yml # Database migrations validation gate
+│   │   ├── dotnet-tests.yml        # Test execution (Unit, Integration)
+│   │   ├── playwright-tests.yml    # Test execution (UI End-to-End)
+│   │   ├── docker-delivery.yml     # Multi-stage Docker build & Trivy scanner
 │   │   ├── cd-deployment.yml       # Multi-stage Continuous Delivery (CD)
 │   │   └── resharper-analysis-pr.yml # PR code smell inline annotator
 │   └── dependabot.yml              # Dependency tracking configuration
 ├── MvcMovie/                       # ASP.NET Core 8.0 MVC Web App
 │   ├── Controllers/, Models/, Views/, wwwroot/
 │   ├── Program.cs, appsettings.json
-│   └── MvcMovie.csproj             # Main project dependencies
+│   ├── MvcMovie.csproj             # Main project dependencies
+│   ├── Dockerfile                  # Hardened multi-stage container manifest
+│   └── .dockerignore               # Docker build context filter
 ├── MvcMovie.Tests/                 # Isolated Automated Testing Module
 │   ├── UnitTests/                  # Fast logical unit testing
 │   ├── IntegrationTests/           # HTTP/Database integration test suites
-│   ├── PlaywrightTests/            # UI End-to-End browser tests
+│   ├── UiTests/                    # UI End-to-End browser tests
 │   └── MvcMovie.Tests.csproj
 ├── .editorconfig                   # Unified formatting rule definition
 ├── .gitignore                      # .NET and SQLite ignore lists
-├── Dockerfile                      # Hardened multi-stage container manifest
-├── .dockerignore                   # Docker build context filter
 └── MvcMovie.sln                    # Central solution layout
 ```
 
 ---
 
-## 2. DevSecOps Pipeline & Governance (10-Gate Architecture)
+## 2. DevSecOps Pipeline & Governance
 
 The CI/CD layout implements ten distinct validation gates to prevent security vulnerabilities, code smells, or layout regression from reaching production.
 
-### Gate 1: ReSharper Code Analysis
+### Gate: ReSharper Code Analysis
 
 - **Workflow File:** `resharper-analysis-pr.yml`
 - **Mechanism:** Runs the JetBrains `inspectcode` Command Line Tool in the CI runner.
 - **Governance:** Injects code smells and styling issues directly as live, interactive inline comments inside Pull Requests, eliminating style debt at the peer-review level.
 
-### Gate 2: Playwright End-to-End Testing
+### Gate: Playwright End-to-End Testing
 
-- **Workflow File:** `dotnet-tests.yml`
+- **Workflow File:** `playwright-tests.yml`
 - **Mechanism:** Installs Playwright browser runtimes and executes black-box UI tests.
 - **Governance:** Automates browser user flow verification (CRUD forms, rendering, redirects) in real headless browsers (Chromium, Firefox, WebKit).
 
-### Gate 3: Unit and Integration Testing (xUnit)
+### Gate: Unit and Integration Testing (xUnit)
 
 - **Workflow File:** `dotnet-tests.yml`
 - **Mechanism:** Executes tests using `Microsoft.AspNetCore.Mvc.Testing` (`WebApplicationFactory<Program>`) using SQLite.
@@ -63,29 +65,27 @@ The CI/CD layout implements ten distinct validation gates to prevent security vu
     - **LocalDB Replacement:** Replaces heavy SQL Server LocalDB with SQLite to run tests without database engine overhead on lightweight Linux runners.
     - **Dynamic DB Profiles:** Runs in-memory (`Data Source=:memory:`) in CI for transient, volatile test execution (auto-wiped on completion), and persists locally (`Data Source=MvcMovie.db`) during development.
 
-### Gate 4: Docker Multi-Stage Build & Trivy Scan
+### Gate: Docker Multi-Stage Build & Trivy Scan
 
-- **Workflow File:** `docker-build-scan.yml`
+- **Workflow File:** `docker-delivery.yml`
 - **Mechanism:** Builds a hardened container image and scans it with **Trivy** (Aqua Security).
 - **Governance:**
     - **Hardened Base Image:** Compiles with `.NET 8 SDK`, then copies compiled binaries into the minimal, secure, non-root `8.0-jammy-chiseled` Ubuntu-based ASP.NET Runtime image.
     - **Trivy Scanner:** Analyzes OS and packages. Fails the pipeline if any `CRITICAL` vulnerability with an available patch is found (`ignore-unfixed: true`).
 
-### Gate 5: CodeQL Static Security Scanning (SAST)
+### Gate: CodeQL Static Security Scanning (SAST)
 
 - **Workflow File:** `codeql-analysis.yml`
 - **Mechanism:** Native GitHub Advanced Security engine that intercepts compilation.
 - **Governance:** Scans abstract syntax trees (AST) and data-flows for SQL injection, Cross-Site Scripting (XSS), cryptographic weaknesses, and hardcoded secrets.
 
-### Gate 6: Database Migration Verification
+### Gate: Database Migration Verification
 
-- **Local / CI Command:**
-    ```bash
-    dotnet ef migrations script --output migration.sql --project MvcMovie/MvcMovie.csproj
-    ```
-- **Governance:** Ensures EF Core migrations compile successfully, generates SQL deployment scripts, and verifies schema synchronicity (`dotnet ef migrations has-pending-model-changes`) to prevent database drift in production.
+- **Workflow File:** `database-validation.yml`
+- **Mechanism:** Installs the EF Core CLI tool, compiles migrations, generates a dry-run idempotent script (`migration.sql`), and verifies schema synchronicity.
+- **Governance:** Ensures EF Core migrations compile successfully, generates SQL deployment scripts, and checks for pending model changes (`dotnet ef migrations has-pending-model-changes`) to prevent database drift in production.
 
-### Gate 7: Automated Code Style Verification (`dotnet format`)
+### Gate: Automated Code Style Verification (`dotnet format`)
 
 - **Workflow File:** `code-style.yml`
 - **Mechanism:** Executes a read-only formatting check:
@@ -94,20 +94,20 @@ The CI/CD layout implements ten distinct validation gates to prevent security vu
     ```
 - **Governance:** Fails the build if code layout, spacing, or namespace import ordering violates the rules declared in `.editorconfig`.
 
-### Gate 8: Continuous Delivery (CD) Environments & Approval Gates
+### Gate: Continuous Delivery (CD) Environments & Approval Gates
 
 - **Workflow File:** `cd-deployment.yml`
 - **Governance:**
     - **Staging Environment:** Pushes the verified container automatically to a testing sandbox upon merge.
     - **Production Environment:** Protected by an environment lock. Deploying requires manual sign-off by authorized administrators in the GitHub UI before release.
 
-### Gate 9: Automated Supply Chain Tracking (Dependabot)
+### Gate: Automated Supply Chain Tracking (Dependabot)
 
 - **Configuration:** `dependabot.yml`
 - **Mechanism:** Continuously watches upstream NuGet package registries and GitHub Actions markets.
 - **Governance:** Automatically provisions pull requests with release notes to update packages containing security vulnerabilities or outdated code interfaces.
 
-### Gate 10: Enforced Branch Protection
+### Gate: Enforced Branch Protection
 
 - **Governance:**
     - Requires all status checks (`Analyze Code`, `inspect-code`, `run-tests`, `Trivy Scan`) to be green before merging.
@@ -129,7 +129,7 @@ The CI/CD layout implements ten distinct validation gates to prevent security vu
     dotnet restore
     dotnet run --project MvcMovie/MvcMovie.csproj
     ```
-2. Open `http://localhost:5000` (or the HTTPS port shown in terminal) to access the application.
+2. Open `http://localhost:5221` (or the specific port printed in the terminal output, which is configured in `Properties/launchSettings.json`) to access the application.
 3. The application will auto-generate a physical local SQLite database file named `MvcMovie.db`.
 
 ### Database Migrations
